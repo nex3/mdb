@@ -15,12 +15,19 @@ class Database:
         if name in self.server: self.db = self.server[name]
         else: self.db = self.server.create(name)
 
-    def record(self, path):
-        try: song = MusicFile(path)
-        except IOError: return
+    def add(self, path):
+        song = self.song_for(path)
         if song is None: return
+        self.db[song.key] = self.dict_for(song)
 
-        self.db.create(self.dict_for(song))
+    def add_many(self, paths):
+        self.db.update(map(self.dict_for,
+                           filter(None,
+                                  map(self.song_for, paths))))
+
+    def song_for(self, path):
+        try: return MusicFile(path)
+        except IOError: return None
 
     def dict_for(self, song):
         d = {}
@@ -28,4 +35,5 @@ class Database:
             d[tag] = song(tag)
             if isinstance(d[tag], str) or isinstance(d[tag], unicode):
                 d[tag] = d[tag].split("\n")
+        d["_id"] = song.key
         return d

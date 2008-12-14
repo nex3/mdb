@@ -12,4 +12,4 @@ for path in sys.argv[1:]:
         db.record(path)
         break
     for (dirname, _, files) in os.walk(path):
-        for f in files: db.record(os.path.join(dirname, f))
+        db.add_many([os.path.join(dirname, f) for f in files])
