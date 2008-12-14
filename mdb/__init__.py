@@ -34,11 +34,11 @@ class Database:
     def dict_for(self, song):
         d = {}
         for tag in SAVED_METATAGS + song.realkeys():
-            song = song(tag)
-            if song:
-                if isinstance(song, basestring): song = song.split("\n")
-                d[tag] = song
-        for tag, default in defaults.items():
+            val = song(tag)
+            if val:
+                if isinstance(val, basestring): val = val.split("\n")
+                d[tag] = val
+        for tag, default in DEFAULTS.items():
             if not tag in song: song[tag] = default
         # CouchDB doesn't like apostrophes in keys for some reason...
         d["_id"] = song.key.replace("'", "_")
