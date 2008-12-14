@@ -9,6 +9,8 @@ SAVED_METATAGS = [
     "~#disc", "~#discs", "~#track", "~#tracks"
     ]
 
+DEFAULTS = {"~#disc": 1, "~#discs": 1}
+
 class Database:
     def __init__(self, server, name):
         self.server = Server(server)
@@ -36,6 +38,8 @@ class Database:
             if song:
                 if isinstance(song, basestring): song = song.split("\n")
                 d[tag] = song
+        for tag, default in defaults.items():
+            if not tag in song: song[tag] = default
         # CouchDB doesn't like apostrophes in keys for some reason...
         d["_id"] = song.key.replace("'", "_")
         return d
