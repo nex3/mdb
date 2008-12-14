@@ -9,8 +9,8 @@
 
 import tempfile
 
-from quodlibet import util
-from quodlibet.formats._audio import AudioFile
+from mdb import util
+from mdb.formats._audio import AudioFile
 
 extensions = ['.mp4', '.m4a']
 

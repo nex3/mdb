@@ -7,7 +7,7 @@
 # $Id$
 
 from mutagen.mp3 import MP3
-from quodlibet.formats._id3 import ID3File
+from mdb.formats._id3 import ID3File
 
 extensions = [".mp3", ".mp2"]
 

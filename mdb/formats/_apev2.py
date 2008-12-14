@@ -6,7 +6,7 @@
 #
 # $Id$
 
-from quodlibet.formats._audio import AudioFile
+from mdb.formats._audio import AudioFile
 
 try: import mutagen.apev2
 except ImportError: pass

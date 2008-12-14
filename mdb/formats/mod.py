@@ -8,7 +8,7 @@
 
 import os
 
-from quodlibet.formats._audio import AudioFile
+from mdb.formats._audio import AudioFile
 
 extensions = [
     '.669', '.amf', '.ams', '.dsm', '.far', '.it', '.med', '.mod', '.mt2',

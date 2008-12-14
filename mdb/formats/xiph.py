@@ -8,10 +8,7 @@
 
 import mutagen
 
-from quodlibet import config
-from quodlibet import const
-
-from quodlibet.formats._audio import AudioFile
+from mdb.formats._audio import AudioFile
 
 class MutagenVCFile(AudioFile):
     format = "Unknown Mutagen + vorbiscomment"
@@ -31,16 +28,6 @@ class MutagenVCFile(AudioFile):
         self.sanitize(filename)
 
     def _post_read(self):
-        email = config.get("editing", "save_email").strip()
-        maps = {"rating": float, "playcount": int}
-        for keyed_key, func in maps.items():
-            for subkey in ["", ":" + const.EMAIL, ":" + email]:
-                key = keyed_key + subkey
-                if key in self:
-                    try: self["~#" + keyed_key] = func(self[key])
-                    except ValueError: pass
-                    del(self[key])
-
         if "totaltracks" in self:
             self.setdefault("tracktotal", self["totaltracks"])
             del(self["totaltracks"])
@@ -64,26 +51,10 @@ class MutagenVCFile(AudioFile):
                       not k.startswith("rating:") and
                       not k.startswith("playcount:"))
 
-    def _prep_write(self, comments):
-        email = config.get("editing", "save_email").strip()
-        for key in comments.keys():
-            if key.startswith("rating:") or key.startswith("playcount:"):
-                if key.split(":", 1)[1] in [const.EMAIL, email]:
-                    del(comments[key])
-            else: del(comments[key])
-
-        if config.getboolean("editing", "save_to_songs"):
-            email = email or const.EMAIL
-            if self["~#rating"] != 0.5:
-                comments["rating:" + email] = str(self["~#rating"])
-            if self["~#playcount"] != 0:
-                comments["playcount:" + email] = str(int(self["~#playcount"]))
-
     def write(self):
         audio = self.MutagenType(self["~filename"])
         if audio.tags is None:
             audio.add_tags()
-        self._prep_write(audio.tags)
         for key in self.realkeys():
             audio.tags[key] = self.list(key)
         audio.save()

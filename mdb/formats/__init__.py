@@ -9,6 +9,7 @@
 import sys
 import traceback
 
+from warnings import warn
 from glob import glob
 from os.path import dirname, basename, join
 
@@ -29,7 +30,7 @@ for i, name in enumerate(modules):
         _infos[ext] = format.info
     # Migrate pre-0.16 library, which was using an undocumented "feature".
     sys.modules[name.replace(".", "/")] = format
-    if name and name.startswith("quodlibet."):
+    if name and name.startswith("mdb."):
         sys.modules[name.split(".", 1)[1]] = sys.modules[name]
     modules[i] = (format.extensions and name.split(".")[-1])
 
@@ -54,7 +55,7 @@ def MusicFile(filename):
                 sys.last_type = sys.last_value = sys.last_traceback = None
                 return _infos[ext](filename)
             except:
-                print_w(_("Error loading %r") % filename)
+                print "Error loading %r" % filename
                 traceback.print_exc()
                 lt, lv, tb = sys.exc_info()
                 sys.last_type, sys.last_value, sys.last_traceback = lt, lv, tb
@@ -71,5 +72,3 @@ def filter(filename):
     for ext in _infos.keys():
         if filename.lower().endswith(ext): return True
     return False
-
-from quodlibet.formats._audio import USEFUL_TAGS, MACHINE_TAGS, PEOPLE

@@ -6,7 +6,7 @@
 #
 # $Id$
 
-from quodlibet.formats._apev2 import APEv2File
+from mdb.formats._apev2 import APEv2File
 
 extensions = [".wv"]
 try:

@@ -14,14 +14,9 @@ import os
 import glob
 import shutil
 import time
+from urllib import pathname2url
 
-from quodlibet import const
-from quodlibet import util
-
-from quodlibet.util.uri import URI
-
-from quodlibet.util.tags import STANDARD_TAGS as USEFUL_TAGS
-from quodlibet.util.tags import MACHINE_TAGS
+from mdb import util
 
 MIGRATE = ("~#playcount ~#laststarted ~#lastplayed ~#added "
            "~#skipcount ~#rating ~bookmark").split()
@@ -113,29 +108,16 @@ class AudioFile(dict):
     def __call__(self, key, default=u"", connector=" - "):
         """Return a key, synthesizing it if necessary. A default value
         may be given (like dict.get); the default default is an empty
-        unicode string (even if the tag is numeric).
-
-        If a tied tag ('a~b') is requested, the 'connector' keyword
-        argument may be used to specify what it is tied with.
-
-        For details on tied tags, see the documentation for util.tagsplit."""
+        unicode string (even if the tag is numeric)."""
 
         if key[:1] == "~":
             key = key[1:]
-            if "~" in key:
-                return connector.join(
-                    filter(None, map(self.__call__, util.tagsplit("~" + key))))
-            elif key == "#track":
+            if key == "#track":
                 try: return int(self["tracknumber"].split("/")[0])
                 except (ValueError, TypeError, KeyError): return default
             elif key == "#disc":
                 try: return int(self["discnumber"].split("/")[0])
                 except (ValueError, TypeError, KeyError): return default
-            elif key == "length":
-                if self.get("~#length", 0) == 0: return default
-                else: return util.format_time(self.get("~#length", 0))
-            elif key == "rating":
-                return util.format_rating(self.get("~#rating", 0))
             elif key == "people":
                 join = "\n".join
                 people = filter(None, map(self.__call__, PEOPLE))
@@ -177,7 +159,7 @@ class AudioFile(dict):
             elif key == "uri":
                 try: return self["~uri"]
                 except KeyError:
-                    return URI.frompath(self["~filename"])
+                    return "file://" + pathname2url(self["~filename"])
             elif key == "format":
                 return self.get("~format", self.format)
             elif key == "year":
@@ -193,10 +175,6 @@ class AudioFile(dict):
                 try: return int(self["discnumber"].split("/")[1])
                 except (ValueError, IndexError, TypeError, KeyError):
                     return default
-            elif key == "lyrics":
-                try: fileobj = file(self.lyric_filename, "rU")
-                except EnvironmentError: return default
-                else: return fileobj.read().decode("utf-8", "replace")
             elif key[:1] == "#" and "~" + key not in self:
                 try: return int(self[key[1:]])
                 except (ValueError, TypeError, KeyError): return default
@@ -206,19 +184,14 @@ class AudioFile(dict):
             title = dict.get(self, "title")
             if title is None:
                 basename = self("~basename")
-                basename = basename.decode(const.FSCODING, "replace")
-                return "%s [%s]" % (basename, _("Unknown"))
+                basename = util.fsdecode(basename)
+                return "%s [%s]" % (basename, "Unknown")
             else: return title
         elif key in SORT_TO_TAG:
             try: return self[key]
             except KeyError:
                 key = SORT_TO_TAG[key]
         return dict.get(self, key, default)
-
-    lyric_filename = property(lambda self: util.fsencode(
-        os.path.join(os.path.expanduser("~/.lyrics"),
-                     self.comma("artist").replace('/', '')[:128],
-                     self.comma("title").replace('/', '')[:128] + '.lyric')))
 
     def comma(self, key):
         """Get all values of a tag, separated by commas. Synthetic
@@ -276,17 +249,6 @@ class AudioFile(dict):
         else: return (k and "=" not in k and "~" not in k
                       and os.access(self["~filename"], os.W_OK))
 
-    def rename(self, newname):
-        """Rename a file. Errors are not handled. This shouldn't be used
-        directly; use library.rename instead."""
-
-        if newname[0] == os.sep: util.mkdir(os.path.dirname(newname))
-        else: newname = os.path.join(self('~dirname'), newname)
-        if not os.path.exists(newname):
-            shutil.move(self['~filename'], newname)
-        elif newname != self['~filename']: raise ValueError
-        self.sanitize(newname)
-
     def website(self):
         """Look for a URL in the audio metadata, or a Google search
         if no URL can be found."""
@@ -337,7 +299,7 @@ class AudioFile(dict):
         self.setdefault("~#skipcount", 0)
         self.setdefault("~#length", 0)
         self.setdefault("~#bitrate", 0)
-        self.setdefault("~#rating", const.DEFAULT_RATING)
+        self.setdefault("~#rating", 0.5)
         self.setdefault("~#added", int(time.time()))
 
         self["~#mtime"] = util.mtime(self['~filename'])

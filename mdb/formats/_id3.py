@@ -9,10 +9,7 @@
 import mutagen.id3
 import tempfile
 
-from quodlibet import config
-from quodlibet import const
-
-from quodlibet.formats._audio import AudioFile
+from mdb.formats._audio import AudioFile
 
 def isascii(s):
     return ((len(s) == 0) or (ord(max(s)) < 128))
@@ -87,10 +84,7 @@ class ID3File(AudioFile):
         }
     PAM_XXXT = dict([(v, k) for k, v in TXXX_MAP.iteritems()])
 
-    CODECS = ["utf-8"]
-    try: CODECS.extend(config.get("editing", "id3encoding").strip().split())
-    except: pass # Uninitialized config...
-    CODECS.append("iso-8859-1")
+    CODECS = ["utf-8", "iso-8859-1"]
 
     Kind = None
 
@@ -112,16 +106,6 @@ class ID3File(AudioFile):
             elif (frame.FrameID == "UFID" and
                   frame.owner == "http://musicbrainz.org"):
                 self["musicbrainz_trackid"] = frame.data
-                continue
-            elif frame.FrameID == "POPM":
-                count = frame.count
-                rating = frame.rating / 255.0
-                if frame.email == const.EMAIL:
-                    self.setdefault("~#playcount", count)
-                    self.setdefault("~#rating", rating)
-                elif frame.email == config.get("editing", "save_email"):
-                    self["~#playcount"] = count
-                    self["~#rating"] = rating
                 continue
             elif frame.FrameID == "COMM" and frame.desc == "":
                 name = "comment"
@@ -198,10 +182,7 @@ class ID3File(AudioFile):
         except mutagen.id3.error: tag = mutagen.id3.ID3()
         tag.delall("COMM:QuodLibet:")
         tag.delall("TXXX:QuodLibet:")
-        for key in ["UFID:http://musicbrainz.org",
-                    "TMCL",
-                    "POPM:%s" % const.EMAIL,
-                    "POPM:%s" % config.get("editing", "save_email")]:
+        for key in ["UFID:http://musicbrainz.org", "TMCL"]:
             if key in tag:
                 del(tag[key])
 
@@ -290,15 +271,6 @@ class ID3File(AudioFile):
                     encoding=0, text=self[key].split("\n"),
                     desc=self.PAM_XXXT[key])
                 tag.add(f)
-
-        if (config.getboolean("editing", "save_to_songs") and
-            (self["~#rating"] != 0.5 or self["~#playcount"] != 0)):
-            email = config.get("editing", "save_email").strip()
-            email = email or const.EMAIL
-            t = mutagen.id3.POPM(email=email,
-                                 rating=int(255*self["~#rating"]),
-                                 count=self["~#playcount"])
-            tag.add(t)
 
         tag.save(self["~filename"])
         self.sanitize()
