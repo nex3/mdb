@@ -2,18 +2,22 @@
 import sys
 import os
 import traceback
+
 from mdb import Database
 
 server = 'http://localhost:5984/'
 name = 'mdb'
 
-for path in sys.argv[1:]:
-    db = Database(server, name)
-    if os.path.isfile(path):
-        db.record(path)
-        break
-    for (dirname, _, files) in os.walk(path):
-        try: db.add_many([os.path.join(dirname, f) for f in files])
-        except Exception:
-            print "Error when importing %s:" % dirname
-            traceback.print_exc()
+def mywalk(paths):
+    for path in paths:
+        if os.path.isfile(path): yield [os.path.abspath(path)]
+        else:
+            for (dirname, _, files) in os.walk(path):
+                yield [os.path.abspath(os.path.join(dirname, f)) for f in files]
+
+db = Database(server, name)
+for paths in mywalk(sys.argv[1:]):
+    try: db.add_many(paths)
+    except Exception:
+        print "Error when importing %s:" % dirname
+        traceback.print_exc()
