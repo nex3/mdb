@@ -26,7 +26,7 @@ class Database:
                                   map(self.song_for, paths))))
 
     def song_for(self, path):
-        try: return MusicFile(path)
+        try: return MusicFile(path.decode("utf-8", "replace"))
         except IOError: return None
 
     def dict_for(self, song):
