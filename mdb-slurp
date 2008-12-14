@@ -4,7 +4,7 @@ import os
 import traceback
 from mdb import Database
 
-server  = 'http://localhost:5984/'
+server = 'http://localhost:5984/'
 name = 'mdb'
 
 for path in sys.argv[1:]:
