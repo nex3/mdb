@@ -1,23 +1,8 @@
 #!/usr/bin/env python
 import sys
-import os
-import traceback
-
-from mdb import Database
+from mdb.slurp import Slurp
 
 server = 'http://localhost:5984/'
 name = 'mdb'
 
-def mywalk(paths):
-    for path in paths:
-        if os.path.isfile(path): yield [os.path.abspath(path)]
-        else:
-            for (dirname, _, files) in os.walk(path):
-                yield [os.path.abspath(os.path.join(dirname, f)) for f in files]
-
-db = Database(server, name)
-for paths in mywalk(sys.argv[1:]):
-    try: db.add_many(paths)
-    except Exception:
-        print "Error when importing %s:" % dirname
-        traceback.print_exc()
+Slurp(server, name, sys.argv[1:]).run()
