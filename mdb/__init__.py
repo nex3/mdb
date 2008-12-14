@@ -32,8 +32,10 @@ class Database:
     def dict_for(self, song):
         d = {}
         for tag in SAVED_METATAGS + song.realkeys():
-            d[tag] = song(tag)
-            if isinstance(d[tag], str) or isinstance(d[tag], unicode):
-                d[tag] = d[tag].split("\n")
-        d["_id"] = song.key
+            song = song(tag)
+            if song:
+                if isinstance(song, basestring): song = song.split("\n")
+                d[tag] = song
+        # CouchDB doesn't like apostrophes in keys for some reason...
+        d["_id"] = song.key.replace("'", "_")
         return d
