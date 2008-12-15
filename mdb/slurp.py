@@ -6,22 +6,28 @@ from mdb.progress import ProgressBar, Fraction
 from mdb import Database
 
 class Slurp:
-    def __init__(self, server, name, paths):
+    def __init__(self, server, name, paths, progress=True):
         self.paths = paths
         self.current_files = 0
         self.current_dir = ''
         self.db = Database(server, name)
+        self.progress = progress
 
-        self._count_files(paths)
-        widgets = [Fraction(), ", ", Percentage(), " ", Bar()]
+        if progress:
+            self._count_files(paths)
+        else:
+            self.total_files = sys.maxint
+        widgets = [Fraction(), ", ", Percentage(), " ", Bar()] if progress else []
         self.bar = ProgressBar(self.total_files, widgets=widgets)
 
     def _count_files(self, paths):
         self.total_files = 0
         for files in self._walk(paths):
             self.total_files += len(files)
-            sys.stderr.write("Counting files... %d\r" % self.total_files)
-        sys.stderr.write("\n")
+            if self.progress:
+                sys.stderr.write("Counting files... %d\r" % self.total_files)
+        if self.progress:
+            sys.stderr.write("\n")
 
     def run(self):
         self.bar.start()
@@ -32,11 +38,14 @@ class Slurp:
             except Exception:
                 print "Error when importing %s:" % self.current_dir
                 traceback.print_exc()
+                if self.progress:
+                    sys.stderr.write("\n\n")
             self._update(paths)
         self.bar.finish()
 
     def _update(self, paths = []):
-        self.bar.fd.write("\033[1A\033[KSlurping %r...\r\033[1B" % self.current_dir)
+        if self.progress:
+            self.bar.fd.write("\033[1A\033[KSlurping %s...\r\033[1B" % self.current_dir)
         self.current_files += len(paths)
         self.bar.update(self.current_files)
 
