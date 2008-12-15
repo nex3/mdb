@@ -1,35 +1,43 @@
 import os
 import traceback
-from progressbar import ProgressBar
+from progressbar import Percentage, Bar
+from mdb.progress import ProgressBar, Fraction
 from mdb import Database
 
 class Slurp:
     def __init__(self, server, name, paths):
         self.paths = paths
         self.current_files = 0
+        self.current_dir = ''
         self.db = Database(server, name)
-        print "Calculating number of files..."
-        self.total_files = sum(map(len, self.walk(paths)))
-        self.bar = ProgressBar(self.total_files)
+
+        print "Counting files..."
+        self.total_files = sum(map(len, self._walk(paths)))
+        widgets = [Fraction(), ", ", Percentage(), " ", Bar()]
+        self.bar = ProgressBar(self.total_files, widgets=widgets)
 
     def run(self):
         self.bar.start()
-        for paths in self.walk(self.paths):
+        for paths in self._walk(self.paths):
+            self.current_dir = os.path.dirname(paths[0])
+            self._update()
             try: self.db.add_many(paths)
             except Exception:
-                print "Error when importing %s:" % os.path.dirname(paths[0])
+                print "Error when importing %s:" % self.current_dir
                 traceback.print_exc()
-            self.update(paths)
+            self._update(paths)
         self.bar.finish()
 
-    def update(self, paths):
+    def _update(self, paths = []):
+        self.bar.fd.write("\033[1A\033[KSlurping %r...\r\033[1B" % self.current_dir)
         self.current_files += len(paths)
         self.bar.update(self.current_files)
 
-    def walk(self, paths):
+    def _walk(self, paths):
         for path in paths:
             if os.path.isfile(path): yield [os.path.abspath(path)]
             else:
                 for (dirname, _, files) in os.walk(path):
-                    yield [os.path.abspath(os.path.join(dirname, f)) for f in files]
+                    if files:
+                        yield [os.path.abspath(os.path.join(dirname, f)) for f in files]
         
