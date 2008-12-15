@@ -1,4 +1,5 @@
 import os
+import sys
 import traceback
 from progressbar import Percentage, Bar
 from mdb.progress import ProgressBar, Fraction
@@ -11,10 +12,16 @@ class Slurp:
         self.current_dir = ''
         self.db = Database(server, name)
 
-        print "Counting files..."
-        self.total_files = sum(map(len, self._walk(paths)))
+        self._count_files(paths)
         widgets = [Fraction(), ", ", Percentage(), " ", Bar()]
         self.bar = ProgressBar(self.total_files, widgets=widgets)
+
+    def _count_files(self, paths):
+        self.total_files = 0
+        for files in self._walk(paths):
+            self.total_files += len(files)
+            sys.stderr.write("Counting files... %d\r" % self.total_files)
+        sys.stderr.write("\n")
 
     def run(self):
         self.bar.start()
