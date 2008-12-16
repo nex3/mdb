@@ -1,8 +1,17 @@
 #!/usr/bin/env python
-import sys
+from optparse import OptionParser
+
 from mdb.slurp import Slurp
 
-server = 'http://localhost:5984/'
-name = 'mdb'
+parser = OptionParser()
+parser.add_option("-s", "--server", dest="server",
+                  default='http://localhost:5984/', metavar="URL",
+                  help="The URL of the CouchDB server to which to connect.")
+parser.add_option("-n", "--name", dest="name", default="mdb",
+                  help="The name of the database into which to import the music information.")
+parser.add_option("-q", "--quiet", action="store_false", dest="verbose",
+                  default=True, help="Don't print status information.")
+(options, args) = parser.parse_args()
 
-Slurp(server, name, sys.argv[1:]).run()
+Slurp(args, server=options.server, name=options.name,
+      progress=options.verbose).run()

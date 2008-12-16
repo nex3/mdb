@@ -6,7 +6,7 @@ from mdb.progress import ProgressBar, Fraction
 from mdb import Database
 
 class Slurp:
-    def __init__(self, server, name, paths, progress=True):
+    def __init__(self, paths, server, name, progress=True):
         self.paths = paths
         self.current_files = 0
         self.current_dir = ''
