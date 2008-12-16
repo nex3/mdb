@@ -25,8 +25,22 @@ def _id(path):
 class Database:
     def __init__(self, server, name):
         self.server = Server(server)
-        if name in self.server: self.db = self.server[name]
-        else: self.db = self.server.create(name)
+        if name in self.server:
+            self.db = self.server[name]
+        else:
+            self.db = self.server.create(name)
+            self.db["_design/update"] = {
+                "language": "javascript",
+                "views": {
+                    "all": {
+                        "map": """
+function(doc) {
+  emit(doc._id, {mtime: doc["~#mtime"], _rev: doc._rev});
+}
+"""
+                        }
+                    }
+                }
 
     def add(self, path):
         song = self.song_for(os.path.realpath(path))
