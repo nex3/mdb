@@ -44,35 +44,35 @@ function(doc) {
         self.view = self.db.view('_view/update/all')
 
     def add(self, path):
-        song = self.song_for(os.path.realpath(path))
+        song = self._song_for(os.path.realpath(path))
         if song is None: return
 
-        song = self.dict_for(song)
-        doc = self.doc_for(song)
+        song = self._dict_for(song)
+        doc = self._doc_for(song)
         if doc: song["_rev"] = doc.value["_rev"]
         self.db[song["_id"]] = song
 
     def add_many(self, paths):
         paths = map(os.path.realpath, paths)
         def updated_file(path):
-            doc = self.doc_for(path)
+            doc = self._doc_for(path)
             if not doc: return True
             return util.mtime(path) > doc.value["mtime"]
 
-        songs = filter(None, map(self.song_for, filter(updated_file, paths)))
+        songs = filter(None, map(self._song_for, filter(updated_file, paths)))
         if not songs: return
-        songs = map(self.dict_for, songs)
+        songs = map(self._dict_for, songs)
         for song in songs:
-            doc = self.doc_for(song)
+            doc = self._doc_for(song)
             if not doc: break
             song["_rev"] = doc.value["_rev"]
         self.db.update(songs)
 
-    def song_for(self, path):
+    def _song_for(self, path):
         try: return MusicFile(path)
         except IOError: return None
 
-    def dict_for(self, song):
+    def _dict_for(self, song):
         d = {}
         for tag in SAVED_METATAGS + song.realkeys():
             val = song(tag)
@@ -88,7 +88,7 @@ function(doc) {
         d["_id"] = _id(song.key)
         return d
 
-    def doc_for(self, song):
+    def _doc_for(self, song):
         docs = list(self.view[_id(song) if isinstance(song, basestring) else song["_id"]])
         if not docs: return None
         return docs[0]
