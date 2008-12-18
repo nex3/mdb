@@ -13,8 +13,17 @@ class Process(pyi.ProcessEvent):
     def process_IN_CREATE(self, event):
         path = os.path.join(event.path, event.name)
         print "Adding %s..." % path
-        time.sleep(0.1) # Make sure the file is actually written
-        self.db.add(path)
+
+        for attempt in range(10):
+            try:
+                self.db.add(path)
+                break
+            except EOFError:
+                if attempt < 9:
+                    print "File not yet written, waiting a second..."
+                    time.sleep(1)
+                else:
+                    print "Giving up."
 
 mask = pyi.EventsCodes.IN_CREATE
 class Watcher:
