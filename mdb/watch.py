@@ -10,6 +10,11 @@ class Process(pyi.ProcessEvent):
     def __init__(self, server, name):
         self.db = Database(server=server, name=name)
 
+    def process_IN_DELETE(self, event):
+        path = os.path.join(event.path, event.name)
+        print "Removing %s..." % path
+        self.db.remove(path)
+
     def process_default(self, event):
         if event.is_dir: return
 
@@ -27,7 +32,7 @@ class Process(pyi.ProcessEvent):
                 else:
                     print "Giving up."
 
-mask = pyi.EventsCodes.IN_CREATE | pyi.EventsCodes.IN_MODIFY
+mask = pyi.EventsCodes.IN_CREATE | pyi.EventsCodes.IN_MODIFY | pyi.EventsCodes.IN_DELETE
 class Watcher:
     def __init__(self, *args, **kwargs):
         self.wm = pyi.WatchManager()

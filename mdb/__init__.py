@@ -68,6 +68,9 @@ function(doc) {
             song["_rev"] = doc.value["_rev"]
         self.db.update(songs)
 
+    def remove(self, path):
+        del self.db[_id(path)]
+
     def _song_for(self, path):
         try: return MusicFile(path)
         except IOError: return None
