@@ -14,11 +14,17 @@ class Process(pyi.ProcessEvent):
         self.db = Database(server=server, name=name)
 
     def process_IN_DELETE(self, event):
+        if event.is_dir: return
+
         path = os.path.join(event.path, event.name)
         print "Removing %s..." % path
         self.db.remove(path)
 
     def process_IN_MOVED_TO(self, event):
+        if not event.is_dir:
+            self.process_default(event)
+            return
+
         path = os.path.join(event.path, event.name)
         print "Slurping %s..." % path
         Slurp([path], server=self.server, name=self.name, progress=False).run()
