@@ -5,15 +5,23 @@ import os
 import pyinotify as pyi
 
 from mdb import Database
+from mdb.slurp import Slurp
 
 class Process(pyi.ProcessEvent):
     def __init__(self, server, name):
+        self.server = server
+        self.name = name
         self.db = Database(server=server, name=name)
 
     def process_IN_DELETE(self, event):
         path = os.path.join(event.path, event.name)
         print "Removing %s..." % path
         self.db.remove(path)
+
+    def process_IN_MOVED_TO(self, event):
+        path = os.path.join(event.path, event.name)
+        print "Slurping %s..." % path
+        Slurp([path], server=self.server, name=self.name, progress=False).run()
 
     def process_default(self, event):
         if event.is_dir: return
@@ -32,7 +40,8 @@ class Process(pyi.ProcessEvent):
                 else:
                     print "Giving up."
 
-mask = pyi.EventsCodes.IN_CREATE | pyi.EventsCodes.IN_MODIFY | pyi.EventsCodes.IN_DELETE
+mask = pyi.EventsCodes.IN_CREATE | pyi.EventsCodes.IN_MODIFY | \
+    pyi.EventsCodes.IN_DELETE | pyi.EventsCodes.IN_MOVED_TO
 class Watcher:
     def __init__(self, *args, **kwargs):
         self.wm = pyi.WatchManager()
