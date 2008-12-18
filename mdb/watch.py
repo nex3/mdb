@@ -29,6 +29,12 @@ class Process(pyi.ProcessEvent):
         print "Slurping %s..." % path
         Slurp([path], server=self.server, name=self.name, progress=False).run()
 
+    def process_IN_MOVED_FROM(self, event):
+        if not event.is_dir:
+            self.process_IN_DELETE(self, event)
+
+        print "Don't know how to deal with a moved directory yet."
+
     def process_default(self, event):
         if event.is_dir: return
 
@@ -47,7 +53,8 @@ class Process(pyi.ProcessEvent):
                     print "Giving up."
 
 mask = pyi.EventsCodes.IN_CREATE | pyi.EventsCodes.IN_MODIFY | \
-    pyi.EventsCodes.IN_DELETE | pyi.EventsCodes.IN_MOVED_TO
+    pyi.EventsCodes.IN_DELETE | pyi.EventsCodes.IN_MOVED_TO | \
+    pyi.EventsCodes.IN_MOVED_FROM
 class Watcher:
     def __init__(self, *args, **kwargs):
         self.wm = pyi.WatchManager()
