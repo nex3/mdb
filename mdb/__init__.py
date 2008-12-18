@@ -64,7 +64,7 @@ function(doc) {
         songs = map(self._dict_for, songs)
         for song in songs:
             doc = self._doc_for(song)
-            if not doc: break
+            if not doc: continue
             song["_rev"] = doc.value["_rev"]
         self.db.update(songs)
 
