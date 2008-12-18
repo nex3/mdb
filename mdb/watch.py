@@ -11,6 +11,8 @@ class Process(pyi.ProcessEvent):
         self.db = Database(server=server, name=name)
 
     def process_default(self, event):
+        if event.is_dir: return
+
         path = os.path.join(event.path, event.name)
         print "Updating %s..." % path
 
@@ -44,4 +46,4 @@ class Watcher:
                 break
 
     def watch(self, path):
-        self.wm.add_watch(path, mask, rec=True)
+        self.wm.add_watch(path, mask, rec=True, auto_add=True)
