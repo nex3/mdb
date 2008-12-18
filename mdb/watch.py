@@ -10,9 +10,9 @@ class Process(pyi.ProcessEvent):
     def __init__(self, server, name):
         self.db = Database(server=server, name=name)
 
-    def process_IN_CREATE(self, event):
+    def process_default(self, event):
         path = os.path.join(event.path, event.name)
-        print "Adding %s..." % path
+        print "Updating %s..." % path
 
         for attempt in range(10):
             try:
@@ -25,7 +25,7 @@ class Process(pyi.ProcessEvent):
                 else:
                     print "Giving up."
 
-mask = pyi.EventsCodes.IN_CREATE
+mask = pyi.EventsCodes.IN_CREATE | pyi.EventsCodes.IN_MODIFY
 class Watcher:
     def __init__(self, *args, **kwargs):
         self.wm = pyi.WatchManager()
