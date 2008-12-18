@@ -41,27 +41,31 @@ function(doc) {
                         }
                     }
                 }
+        self.view = self.db.view('_view/update/all')
 
     def add(self, path):
         song = self.song_for(os.path.realpath(path))
         if song is None: return
-        self.db[song.key] = self.dict_for(song)
+
+        song = self.dict_for(song)
+        doc = self.doc_for(song)
+        if doc: song["_rev"] = doc.value["_rev"]
+        self.db[song["_id"]] = song
 
     def add_many(self, paths):
         paths = map(os.path.realpath, paths)
-        view = self.db.view('_view/update/all')
         def updated_file(path):
-            docs = list(view[_id(path)])
-            if not docs: return True
-            return util.mtime(path) > docs[0].value["mtime"]
+            doc = self.doc_for(path)
+            if not doc: return True
+            return util.mtime(path) > doc.value["mtime"]
 
         songs = filter(None, map(self.song_for, filter(updated_file, paths)))
         if not songs: return
         songs = map(self.dict_for, songs)
         for song in songs:
-            docs = list(view[song["_id"]])
-            if not docs: break
-            song["_rev"] = docs[0].value["_rev"]
+            doc = self.doc_for(song)
+            if not doc: break
+            song["_rev"] = doc.value["_rev"]
         self.db.update(songs)
 
     def song_for(self, path):
@@ -83,3 +87,8 @@ function(doc) {
         # CouchDB doesn't like apostrophes in keys for some reason...
         d["_id"] = _id(song.key)
         return d
+
+    def doc_for(self, song):
+        docs = list(self.view[_id(song) if isinstance(song, basestring) else song["_id"]])
+        if not docs: return None
+        return docs[0]
