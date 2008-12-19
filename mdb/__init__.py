@@ -33,7 +33,7 @@ class Database:
         else:
             self.db = self.server.create(name)
             self._load_views()
-        self.view = self.db.view('_view/update/all')
+        self.view = self.db.view('_view/update/mtime')
 
     def add(self, path):
         song = self._song_for(os.path.realpath(path))
@@ -67,6 +67,14 @@ class Database:
         for song in songs:
             song["_deleted"] = True
         self.db.update(songs)
+
+    def update(self, doc, path):
+        song = self._song_for(path)
+        if song is None: return
+
+        song = self._dict_for(song)
+        song["_rev"] = doc["_rev"]
+        self.db[song["_id"]] = song
 
     def docs_beneath(self, path):
         path = util.qdecode(path).split(os.path.sep)

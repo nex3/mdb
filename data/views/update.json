@@ -1,10 +1,19 @@
 {"language": "javascript",
  "views": {
-     "all": {
+     "mtime": {
          "map": "
 function(doc) {
-  emit(doc._id, {mtime: doc['~#mtime'], _rev: doc._rev});
+    emit(doc._id, {mtime: doc['~#mtime'], _rev: doc._rev});
 }"
-     }
+     },
+     "check": {
+         "map": "
+function(doc) {
+    emit(doc._id, {
+        mtime: doc['~#mtime'], _rev: doc._rev, filename: doc['~filename'],
+        mountpoint: doc['~mountpoint']
+    });
+}"
+   }
  }
 }
