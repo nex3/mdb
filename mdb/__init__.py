@@ -61,6 +61,15 @@ class Database:
     def remove(self, path):
         del self.db[_id(path)]
 
+    def remove_docs(self, songs):
+        for song in songs:
+            song["_deleted"] = True
+        self.db.update(songs)
+
+    def docs_beneath(self, path):
+        path = path.split(os.path.sep)
+        return [row.value for row in self.db.view('_view/tree/by-path', startkey=path, endkey=path + [{}])]
+
     def _song_for(self, path):
         try: return MusicFile(path)
         except IOError: return None

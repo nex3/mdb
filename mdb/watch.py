@@ -33,7 +33,9 @@ class Process(pyi.ProcessEvent):
         if not event.is_dir:
             self.process_IN_DELETE(self, event)
 
-        print "Don't know how to deal with a moved directory yet."
+        path = os.path.join(event.path, event.name)
+        print "Removing %s..." % path
+        self.db.remove_docs(self.db.docs_beneath(path))
 
     def process_default(self, event):
         if event.is_dir: return
