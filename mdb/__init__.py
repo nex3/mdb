@@ -87,6 +87,7 @@ function(doc) {
                 d[tag] = val
         for tag, default in DEFAULTS.items():
             if not tag in song: song[tag] = default
+        d["~path"] = d["~filename"].split(os.path.sep)
         # CouchDB doesn't like apostrophes in keys for some reason...
         d["_id"] = _id(song.key)
         return d
