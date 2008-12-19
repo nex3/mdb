@@ -16,6 +16,8 @@ SAVED_METATAGS = [
 
 SINGLETON_TAGS = ["~filename", "~dirname", "~format", "~mountpoint"]
 
+QUOTED_TAGS = ["~filename", "~dirname", "~mountpoint"]
+
 DEFAULTS = {"~#disc": 1, "~#discs": 1}
 
 def _id(path):
@@ -67,7 +69,7 @@ class Database:
         self.db.update(songs)
 
     def docs_beneath(self, path):
-        path = path.split(os.path.sep)
+        path = util.qdecode(path).split(os.path.sep)
         return [row.value for row in self.db.view('_view/tree/by-path', startkey=path, endkey=path + [{}])]
 
     def _song_for(self, path):
@@ -80,7 +82,10 @@ class Database:
             val = song(tag)
             if val:
                 if isinstance(val, basestring):
-                    val = util.fsdecode(val)
+                    if tag in QUOTED_TAGS:
+                        val = util.qdecode(val)
+                    else:
+                        val = util.fsdecode(val)
                     if not tag in SINGLETON_TAGS:
                         val = val.split("\n")
                 d[tag] = val

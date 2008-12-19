@@ -1,6 +1,7 @@
 import os
 import locale
 import re
+import urllib
 
 def data_path(*path):
     return os.path.join(os.path.dirname(__file__), '..', 'data', *path)
@@ -13,6 +14,13 @@ def mtime(filename):
 def escape(str):
     """Escape a string in a manner suitable for XML/Pango."""
     return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+SAFE_QUOTE_CHARS = "".join(chr(i) for i in range(32,126) if chr(i) != '%')
+def qdecode(s):
+    return urllib.quote(s, SAFE_QUOTE_CHARS).decode()
+
+def qencode(s):
+    return urllib.unquote(s.encode())
 
 def fsdecode(s):
     """Decoding a string according to the filesystem encoding."""
