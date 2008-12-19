@@ -1,0 +1,7 @@
+{"language": "javascript",
+ "views": {
+     "by-path": {
+         "map": "function(doc) {emit(doc['~path'], doc);}"
+     }
+ }
+}

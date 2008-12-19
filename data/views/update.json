@@ -1,0 +1,10 @@
+{"language": "javascript",
+ "views": {
+     "all": {
+         "map": "
+function(doc) {
+  emit(doc._id, {mtime: doc['~#mtime'], _rev: doc._rev});
+}"
+     }
+ }
+}

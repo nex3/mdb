@@ -1,5 +1,6 @@
 import os
 import urllib
+import glob
 from datetime import datetime
 
 from couchdb.client import Server
@@ -29,18 +30,7 @@ class Database:
             self.db = self.server[name]
         else:
             self.db = self.server.create(name)
-            self.db["_design/update"] = {
-                "language": "javascript",
-                "views": {
-                    "all": {
-                        "map": """
-function(doc) {
-  emit(doc._id, {mtime: doc["~#mtime"], _rev: doc._rev});
-}
-"""
-                        }
-                    }
-                }
+            self._load_views()
         self.view = self.db.view('_view/update/all')
 
     def add(self, path):
@@ -96,3 +86,11 @@ function(doc) {
         docs = list(self.view[_id(song) if isinstance(song, basestring) else song["_id"]])
         if not docs: return None
         return docs[0]
+
+    def _load_views(self):
+        for view in glob.glob(util.data_path('views', '*.json')):
+            name = os.path.basename(view)[0:-5]
+            f = open(view)
+            # Can't use __setitem__ 'cause it assumes content is a hash
+            self.db.resource.put('_design/' + name, content=f.read())
+            f.close()

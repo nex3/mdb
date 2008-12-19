@@ -2,6 +2,9 @@ import os
 import locale
 import re
 
+def data_path(*path):
+    return os.path.join(os.path.dirname(__file__), '..', 'data', *path)
+
 def mtime(filename):
     """Return the mtime of a file, or 0 if an error occurs."""
     try: return os.path.getmtime(filename)
