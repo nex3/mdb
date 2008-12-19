@@ -15,10 +15,8 @@ class Slurp:
 
         if progress:
             self._count_files(paths)
-        else:
-            self.total_files = sys.maxint
-        widgets = [Fraction(), ", ", Percentage(), " ", Bar()] if progress else []
-        self.bar = ProgressBar(self.total_files, widgets=widgets)
+            widgets = [Fraction(), ", ", Percentage(), " ", Bar()] if progress else []
+            self.bar = ProgressBar(self.total_files, widgets=widgets)
 
     def _count_files(self, paths):
         self.total_files = 0
@@ -30,22 +28,21 @@ class Slurp:
             sys.stderr.write("\n")
 
     def run(self):
-        self.bar.start()
+        if self.progress: self.bar.start()
         for paths in self._walk(self.paths):
             self.current_dir = os.path.dirname(paths[0])
             self._update()
             try: self.db.add_many(paths)
             except Exception:
-                print "Error when importing %s:" % self.current_dir
+                sys.stderr.write("Error when importing %s:\n" % self.current_dir)
                 traceback.print_exc()
-                if self.progress:
-                    sys.stderr.write("\n\n")
+                if self.progress: sys.stderr.write("\n\n")
             self._update(paths)
-        self.bar.finish()
+        if self.progress: self.bar.finish()
 
     def _update(self, paths = []):
-        if self.progress:
-            self.bar.fd.write("\033[1A\033[KSlurping %s...\r\033[1B" % self.current_dir)
+        if not self.progress: return
+        self.bar.fd.write("\033[1A\033[KSlurping %s...\r\033[1B" % self.current_dir)
         self.current_files += len(paths)
         self.bar.update(self.current_files)
 
@@ -56,4 +53,3 @@ class Slurp:
                 for (dirname, _, files) in os.walk(path):
                     if files:
                         yield [os.path.abspath(os.path.join(dirname, f)) for f in files]
-        
