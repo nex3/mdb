@@ -1,0 +1,53 @@
+MDB is a little program to read media files into a CouchDB database
+and keep that database up-to-date.
+It uses the [Mutagen](code.google.com/p/quodlibet/wiki/Mutagen) tagging library,
+which supports lots of data formats,
+any custom tags that might be sitting around on your media,
+and any number of values per tag.
+CouchDB supports these last two as well, which makes for a nice pairing.
+
+MDB also uses a slightly modified version of [Quod Libet](code.google.com/p/quodlibet)'s
+format-normalization library, located in `mdb/formats`.
+Modification was necessary to remove the dependency on a running Quod Libet instance.
+
+### Tools
+
+MDB has three tools: `mdb-slurp`, `mdb-check`, and `mdb-watch`.
+`mdb-slurp` takes a list of directories or files and reads them into the database.
+If the database is already populated,
+it'll skip over songs that haven't been updated.
+`mdb-check` checks to see if any song that's already in the database
+has been updated or deleted, and modifies the database accordingly.
+`mdb-watch` watches your music directories or files,
+and updates the database when they change or are removed.
+It uses [pyinotify](http://pyinotify.sourceforge.net/),
+so it'll only work on Linux.
+
+### Database
+
+The database format is mostly a dump of the quodlibet.formats normalized tags and internal tags.
+The internal tags are documented [on the Quod Libet wiki](http://code.google.com/p/quodlibet/wiki/Guide_InternalTags);
+MDB stores `~filename`, `~dirname`, `~format`, `~mountpoint`, `~performers`,  `~people`, `~#added`,
+`~#bitrate`, `~#length`, `~#year`, `~#mtime`, `~#disc`, `~#discs`, `~#track`, and `~#tracks`.
+In addition, it stores the normalized fields `grouping`, `title`, `version`, `artist`, `performer`,
+`conductor`, `arranger`, `lyricist`, `composer`, `encodedby`, `album`, `tracknumber`, `discnumber`,
+`isrc`, `copyright`, `organization`, `discsubtitle`, `author`, `mood`, `bpm`, `date`, `originaldate`,
+`originalalbum`, `originalartist`, `website`, `artistsort`, `albumsort`, `artistsort`, `media`,
+`compilation`, `albumartist`, `comment`, `musicbrainz_artistid`, `musicbrainz_trackid`,
+`musicbrainz_albumid`, `musicbrainz_albumartistid`, `musicip_puid`, `musicbrainz_albumstatus`,
+`musicbrainz_albumtype`, `musicbrainz_trmid`, `releasecountry`, `remixer`, and `producer`.
+Not all of these will be present on all albums.
+
+All string fields other than `~filename`, `~dirname`, `~format`, and `~mountpoint`
+are stored as arrays of strings,
+because they may contain multiple values.
+
+The fields `~filename`, `~dirname`, and `~mountpoint` are partially URL-encoded
+because they may contain non-Unicode characters.
+They should be URL-decoded before use.
+
+### Dependencies
+
+I wrote MDB using Mutagen 1.15, couchdb-python 0.5dev-r127, and progressbar 2.2.
+`mdb-watch` uses pyinotify 0.7.1.
+Slightly different versions might work, majorly different versions probably won't.
